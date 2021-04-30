@@ -7,6 +7,10 @@ use lib::{catalog, document, font, page, pages, resources, ContentBuilder};
 
 pub fn main() {
     let font_family = "Courier";
+    let font_size = 48;
+    let position = (100, 600);
+    let text = "Hello World!";
+    let out_filepath = "example.pdf";
 
     let mut doc = document();
 
@@ -15,9 +19,10 @@ pub fn main() {
     let resources_id = doc.add_object(resources(font_id));
 
     let content = ContentBuilder::new()
-        .font("F1", 48)
-        .position((100, 600))
-        .text("good bye")
+        .font("F1", font_size)
+        .position(position)
+        .text(text)
+        .text(text)
         .build();
     let content_id =
         doc.add_object(Stream::new(dictionary! {}, content.encode().unwrap())); // Result
@@ -29,5 +34,5 @@ pub fn main() {
     let catalog_id = doc.add_object(catalog(pages_id));
     doc.trailer.set("Root", catalog_id);
     doc.compress();
-    doc.save("example.pdf").unwrap(); // Result
+    doc.save(out_filepath).unwrap(); // Result
 }

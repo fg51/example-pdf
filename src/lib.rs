@@ -9,7 +9,9 @@ pub const END_TEXT: &'static str = "ET";
 pub const TEXT_FONT: &'static str = "Tf";
 pub const TEXT_POSITION: &'static str = "Td";
 pub const TEXT_ONE: &'static str = "Tj";
+pub const TEXT_WITH_LINE_FEED: &'static str = "Tj T*";
 pub const TEXT_ANY: &'static str = "TJ";
+pub const TEXT_LINES: &'static str = "TL";
 
 pub fn document() -> Document {
     Document::with_version(PDF_VERSION)
@@ -95,24 +97,31 @@ impl<'a> ContentBuilder<'a> {
 
     pub fn build(self) -> Content {
         let position = self.position.unwrap();
-        let text = self.texts.join("");
+
+        let mut operations = vec![
+            Operation::new(BEGIN_TEXT, vec![]),
+            Operation::new(
+                TEXT_FONT,
+                vec![
+                    self.font_resource.unwrap().into(),
+                    self.font_size.unwrap().into(),
+                ],
+            ),
+            Operation::new(TEXT_POSITION, vec![position.0.into(), position.1.into()]),
+        ];
+
+        let line_interval = 50;
+        operations.push(Operation::new(TEXT_LINES, vec![line_interval.into()]));
+        for i in self.texts {
+            operations.push(Operation::new(
+                TEXT_WITH_LINE_FEED,
+                vec![Object::string_literal(i)],
+            ));
+        }
+        operations.push(Operation::new(END_TEXT, vec![]));
+
         Content {
-            operations: vec![
-                Operation::new(BEGIN_TEXT, vec![]),
-                Operation::new(
-                    TEXT_FONT,
-                    vec![
-                        self.font_resource.unwrap().into(),
-                        self.font_size.unwrap().into(),
-                    ],
-                ),
-                Operation::new(
-                    TEXT_POSITION,
-                    vec![position.0.into(), position.1.into()],
-                ),
-                Operation::new(TEXT_ONE, vec![Object::string_literal(text)]),
-                Operation::new(END_TEXT, vec![]),
-            ],
+            operations: operations,
         }
     }
 }
