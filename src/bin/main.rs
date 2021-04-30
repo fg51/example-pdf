@@ -1,22 +1,14 @@
 use lopdf::content::{Content, Operation};
 use lopdf::dictionary;
-use lopdf::{Document, Object, Stream};
+use lopdf::ObjectId;
+use lopdf::{Dictionary, Document, Object, Stream};
 
 pub fn main() {
     let mut doc = Document::with_version("1.5");
 
     let pages_id = doc.new_object_id();
-    let font_id = doc.add_object(dictionary! {
-        "Type" => "Font",
-        "Subtype" => "Type1",
-        "BaseFont" => "Courier",
-    });
-    let resources_id = doc.add_object(dictionary! {
-        "Font" => dictionary! {
-            "F1" => font_id,
-        },
-    });
-
+    let font_id = doc.add_object(font());
+    let resources_id = doc.add_object(resources(font_id));
     let content = Content {
         operations: vec![
             Operation::new("BT", vec![]),
@@ -50,4 +42,20 @@ pub fn main() {
     doc.trailer.set("Root", catalog_id);
     doc.compress();
     doc.save("example.pdf").unwrap();
+}
+
+fn font() -> Dictionary {
+    dictionary! {
+        "Type" => "Font",
+        "Subtype" => "Type1",
+        "BaseFont" => "Courier",
+    }
+}
+
+fn resources(font_id: u32) -> Dictionary {
+    dictionary! {
+        "Font" => dictionary! {
+            "F1" => font_id,
+        },
+    }
 }
