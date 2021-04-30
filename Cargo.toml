@@ -9,4 +9,5 @@ publish = false
 
 [dependencies]
 anyhow = "1"
+lopdf = "*"
 thiserror = "1"
